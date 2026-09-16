@@ -10,7 +10,7 @@ import StatusMessage from "../../components/StatusMessage";
 
 const REQUIRED_EXPERIMENT_COUNT = 2;
 
-/** Step 1 of the cell selector: choose exactly two experiments and merge them. */
+/** Step 1 of the cell selector: choose experiments, then inspect their cell types. */
 const ExperimentPickerPage: React.FC = () => {
     const navigate = useNavigate();
 
@@ -77,12 +77,12 @@ const ExperimentPickerPage: React.FC = () => {
         setIsMerging(true);
         setErrorMessage(null);
         try {
-            const mergeResult = await apiRegistry.cellSelection.mergeExperiments(
+            const mergeResult = await apiRegistry.cellSelection.previewCellTypes(
                 selectedExperimentIds,
             );
             navigate("/cell-selection/cell-types", { state: mergeResult });
         } catch (cause) {
-            setErrorMessage(ApiError.from(cause, "The experiments could not be merged.").message);
+            setErrorMessage(ApiError.from(cause, "The cell types could not be loaded.").message);
         } finally {
             setIsMerging(false);
         }
@@ -93,8 +93,8 @@ const ExperimentPickerPage: React.FC = () => {
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold text-black">Cell selector</h1>
                 <p className="text-sm text-gray-600">
-                    Choose exactly {REQUIRED_EXPERIMENT_COUNT} experiments. They are merged into
-                    one dataset you can then filter by cell type.
+                    Step 1: Choose exactly {REQUIRED_EXPERIMENT_COUNT} experiments. Next, select
+                    the cell types to keep from each experiment.
                 </p>
             </div>
 
@@ -184,14 +184,13 @@ const ExperimentPickerPage: React.FC = () => {
                         onClick={handleMerge}
                         disabled={!canMerge}
                     >
-                        {isMerging ? "Merging ..." : "Merge the experiments"}
+                        {isMerging ? "Loading cell types ..." : "Next: choose cell types"}
                     </Button>
                 </div>
 
                 {isMerging && (
                     <StatusMessage tone="info">
-                        Merging can take a few minutes for large datasets. Please keep this tab
-                        open.
+                        Reading the cell types from the selected experiments.
                     </StatusMessage>
                 )}
             </Card>

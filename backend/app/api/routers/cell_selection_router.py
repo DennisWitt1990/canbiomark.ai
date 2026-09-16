@@ -11,6 +11,7 @@ from ...services.workspace_service import UserWorkspace
 from ..dependencies import get_container, get_current_user, get_current_workspace
 from ..schemas.cell_selection_schemas import (
     ExperimentResponse,
+    SelectCellTypesRequest,
     FilterCellTypesRequest,
     FilterCellTypesResponse,
     MergeExperimentsRequest,
@@ -62,3 +63,23 @@ def filter_cell_types(
         CellTypeSelection.from_mapping(filter_request.selected_cell_types),
     )
     return FilterCellTypesResponse(final_path=final_path)
+
+
+@router.post("/cell-types")
+def list_cell_types(
+    request: MergeExperimentsRequest,
+    container: ServiceContainer = Depends(get_container),
+):
+    return {"cell_types_by_experiment": container.cell_selection_service.list_cell_types(request.experiment_ids)}
+
+
+@router.post("/select", response_model=FilterCellTypesResponse)
+def create_selected_dataset(
+    request: SelectCellTypesRequest,
+    workspace: UserWorkspace = Depends(get_current_workspace),
+    container: ServiceContainer = Depends(get_container),
+) -> FilterCellTypesResponse:
+    path = container.cell_selection_service.create_selected_dataset(
+        workspace, request.experiment_ids, CellTypeSelection.from_mapping(request.selected_cell_types)
+    )
+    return FilterCellTypesResponse(final_path=path)

@@ -39,6 +39,11 @@ export interface MergeResult {
     cellTypesByExperiment: Record<string, string[]>;
 }
 
+export interface CellTypePreview {
+    experimentIds: number[];
+    cellTypesByExperiment: Record<string, string[]>;
+}
+
 /** The cell selector workflow. */
 export class CellSelectionApi {
     constructor(private readonly httpClient: HttpClient) {}
@@ -48,6 +53,21 @@ export class CellSelectionApi {
             "/cell-selection/experiments",
         );
         return payloads.map((payload) => new Experiment(payload));
+    }
+
+    async previewCellTypes(experimentIds: number[]): Promise<CellTypePreview> {
+        const response = await this.httpClient.post<{
+            cell_types_by_experiment: Record<string, string[]>;
+        }>("/cell-selection/cell-types", { experiment_ids: experimentIds });
+        return { experimentIds, cellTypesByExperiment: response.cell_types_by_experiment };
+    }
+
+    async createSelectedDataset(experimentIds: number[], selectedCellTypes: Record<string, string[]>): Promise<string> {
+        const response = await this.httpClient.post<{ final_path: string }>(
+            "/cell-selection/select",
+            { experiment_ids: experimentIds, selected_cell_types: selectedCellTypes },
+        );
+        return response.final_path;
     }
 
     async mergeExperiments(experimentIds: number[]): Promise<MergeResult> {

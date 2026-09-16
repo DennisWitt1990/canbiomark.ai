@@ -13,7 +13,7 @@ const MODULE_TILES: ModuleTile[] = [
     {
         title: "Cell selector",
         description:
-            "Pick two experiments from the catalogue, merge them and keep only the cell types you need.",
+            "Pick two experiments, choose the cell types from each, then create the combined dataset.",
         route: "/cell-selection",
     },
     {

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "../../api/ApiError";
 import { apiRegistry } from "../../api/ApiRegistry";
-import type { MergeResult } from "../../api/CellSelectionApi";
+import type { CellTypePreview } from "../../api/CellSelectionApi";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import StatusMessage from "../../components/StatusMessage";
@@ -11,7 +11,7 @@ import StatusMessage from "../../components/StatusMessage";
 const CellTypePickerPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const mergeResult = location.state as MergeResult | null;
+    const mergeResult = location.state as CellTypePreview | null;
 
     const cellTypesByExperiment = useMemo(
         () => mergeResult?.cellTypesByExperiment ?? {},
@@ -64,8 +64,8 @@ const CellTypePickerPage: React.FC = () => {
         setIsFiltering(true);
         setErrorMessage(null);
         try {
-            const finalPath = await apiRegistry.cellSelection.filterCellTypes(
-                mergeResult.mergedPath,
+            const finalPath = await apiRegistry.cellSelection.createSelectedDataset(
+                mergeResult.experimentIds,
                 selectionByExperiment,
             );
             navigate("/cell-selection/done", { state: { finalPath } });
@@ -78,9 +78,9 @@ const CellTypePickerPage: React.FC = () => {
 
     if (!mergeResult || experimentNames.length === 0) {
         return (
-            <Card title="No merged dataset">
+            <Card title="No experiments selected">
                 <p className="text-sm text-gray-600">
-                    This page needs the result of a merge. Please start again from the experiment
+                    Please start from the experiment
                     selection.
                 </p>
                 <Button
@@ -99,8 +99,8 @@ const CellTypePickerPage: React.FC = () => {
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold text-black">Cell selector</h1>
                 <p className="text-sm text-gray-600">
-                    Choose at least one cell type per experiment. Everything else is dropped from
-                    the final dataset.
+                    Step 2: Choose at least one cell type per experiment. Only the selected cells
+                    will be merged into the final dataset.
                 </p>
             </div>
 
@@ -174,7 +174,7 @@ const CellTypePickerPage: React.FC = () => {
                 onClick={handleFilter}
                 disabled={!everyExperimentHasASelection || isFiltering}
             >
-                {isFiltering ? "Filtering ..." : "Create the final dataset"}
+                {isFiltering ? "Creating dataset ..." : "Create the final dataset"}
             </Button>
         </div>
     );

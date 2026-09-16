@@ -52,3 +52,9 @@ class FilterCellTypesResponse(BaseModel):
     """The final, SimBu-ready dataset."""
 
     final_path: str
+
+
+class SelectCellTypesRequest(MergeExperimentsRequest):
+    """Experiments and cell types chosen before creating the dataset."""
+
+    selected_cell_types: Dict[str, List[str]]

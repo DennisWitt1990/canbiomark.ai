@@ -48,6 +48,56 @@ class CellSelectionService:
     def __init__(self, experiment_catalog: ExperimentCatalogService) -> None:
         self._experiment_catalog = experiment_catalog
 
+    def list_cell_types(self, experiment_ids: Sequence[int]) -> Dict[str, List[str]]:
+        """Read observation metadata before loading or merging expression matrices."""
+        import scanpy
+
+        if len(experiment_ids) != REQUIRED_EXPERIMENT_COUNT or len(set(experiment_ids)) != REQUIRED_EXPERIMENT_COUNT:
+            raise ValidationError("Select exactly two different experiments.")
+        experiments = self._experiment_catalog.get_by_ids(experiment_ids)
+        if len({item.experiment_name for item in experiments}) != len(experiments):
+            raise ValidationError("The selected catalogue entries must have different experiment names.")
+        result = {}
+        for experiment in experiments:
+            dataset = scanpy.read_h5ad(self._experiment_catalog.dataset_path_for(experiment), backed="r")
+            try:
+                required = {_OBSERVATION_EXPERIMENT_COLUMN, _OBSERVATION_CELL_TYPE_COLUMN}
+                if not required.issubset(dataset.obs.columns):
+                    raise ValidationError("The dataset needs file_name and cell_type annotations.")
+                cells = dataset.obs.loc[dataset.obs[_OBSERVATION_EXPERIMENT_COLUMN] == experiment.experiment_name, _OBSERVATION_CELL_TYPE_COLUMN]
+                types = sorted(cells.dropna().astype(str).unique().tolist())
+                if not types:
+                    raise ValidationError(f"No annotated cells found for '{experiment.experiment_name}'.")
+                result[experiment.experiment_name] = types
+            finally:
+                dataset.file.close()
+        return result
+
+    def create_selected_dataset(self, workspace: UserWorkspace, experiment_ids: Sequence[int], selection: CellTypeSelection) -> str:
+        """Select cells within each experiment, then merge the selected subsets."""
+        import numpy
+        import scanpy
+
+        selection.require_non_empty()
+        available = self.list_cell_types(experiment_ids)
+        if set(selection.experiment_names()) != set(available):
+            raise ValidationError("Choose cell types for each selected experiment.")
+        for name, types in available.items():
+            if not selection.selects_every_cell_type(name) and not set(selection.cell_types_for(name)).issubset(types):
+                raise ValidationError(f"Unknown cell type selected for '{name}'.")
+        subsets = []
+        for experiment in self._experiment_catalog.get_by_ids(experiment_ids):
+            subset = self._read_experiment_subset(scanpy, self._experiment_catalog.dataset_path_for(experiment), experiment)
+            if not selection.selects_every_cell_type(experiment.experiment_name):
+                subset = subset[subset.obs[_OBSERVATION_CELL_TYPE_COLUMN].isin(selection.cell_types_for(experiment.experiment_name)), :].copy()
+            subsets.append(subset)
+        dataset = scanpy.concat(subsets, join="outer")
+        dataset.obs[_OBSERVATION_SET_COLUMN] = dataset.obs[_OBSERVATION_EXPERIMENT_COLUMN].astype("category").cat.codes.add(1).astype(str)
+        self._normalize_observations(numpy, dataset)
+        final_path = workspace.cell_selection_directory / FILTERED_DATASET_FILE_NAME
+        dataset.write_h5ad(final_path)
+        return workspace.to_relative_path(final_path)
+
     def merge_experiments(
         self, workspace: UserWorkspace, experiment_ids: Sequence[int]
     ) -> MergeResult:

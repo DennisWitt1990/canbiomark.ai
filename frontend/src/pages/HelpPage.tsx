@@ -20,8 +20,8 @@ const HELP_SECTIONS: HelpSection[] = [
     {
         title: "Cell selector",
         paragraphs: [
-            "Choose exactly two experiments from the shared catalogue. They are merged into one dataset, and the cell types found in each are listed for you.",
-            "Then keep the cell types you want per experiment. Everything else is dropped. The result is written to your workspace as a .h5ad file that the tissue generator can read directly.",
+            "Choose exactly two experiments from the shared catalogue. The cell types found in each are listed before merging.",
+            "Then keep the cell types you want per experiment. Only your selected cells are merged. The result is written to your workspace as a .h5ad file that the tissue generator can read directly.",
             "Large datasets take a few minutes to merge. Keep the tab open while it runs.",
         ],
     },
