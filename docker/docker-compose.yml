@@ -1,0 +1,64 @@
+# =============================================================================
+# CanBiomark.ai
+#
+#   1. copy .env.example to .env and set ADMIN_PASSWORD and CANBIOMARK_DATA_DIR
+#   2. docker compose up --build
+#   3. open http://localhost:8000
+#
+# Everything the application keeps -- the database, every user's workspace and
+# the shared dataset catalogue -- lives in the one folder you point
+# CANBIOMARK_DATA_DIR at. Back that folder up and you have backed up the
+# installation.
+# =============================================================================
+services:
+  canbiomark:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: canbiomark-ai:2.1.0
+    container_name: canbiomark
+    restart: unless-stopped
+
+    ports:
+      - "${CANBIOMARK_PORT:-8000}:8000"
+
+    volumes:
+      # The single mount point. Left of the colon is your folder on the host.
+      - "${CANBIOMARK_DATA_DIR:-./data}:/data"
+
+    environment:
+      # --- administrator, used only on the very first start ---
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      ADMIN_DISPLAY_NAME: "${ADMIN_DISPLAY_NAME:-Administrator}"
+
+      # --- sessions ---
+      # Set to 1 as soon as you serve this over HTTPS.
+      SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-0}"
+      SESSION_LIFETIME_HOURS: "${SESSION_LIFETIME_HOURS:-12}"
+
+      # --- storage ---
+      DEFAULT_QUOTA_GB: "${DEFAULT_QUOTA_GB:-50}"
+      MAX_DATASET_DOWNLOAD_GB: "${MAX_DATASET_DOWNLOAD_GB:-25}"
+
+      # --- compute ---
+      # H2O runs inside this container; keep it below the memory limit below.
+      H2O_MAX_MEMORY: "${H2O_MAX_MEMORY:-20g}"
+      SIMBU_TIMEOUT_SECONDS: "${SIMBU_TIMEOUT_SECONDS:-3600}"
+
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+
+    # SimBu holds whole expression matrices in memory and H2O reserves its heap
+    # up front, so the container needs real headroom. Raise H2O_MAX_MEMORY and
+    # this limit together, never H2O alone.
+    deploy:
+      resources:
+        limits:
+          memory: "${CANBIOMARK_MEMORY_LIMIT:-32g}"
+
+    # R and Java spawn child processes; without a raised limit large batches
+    # hit the default file-descriptor ceiling.
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 16384

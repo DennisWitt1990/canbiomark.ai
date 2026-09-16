@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# CanBiomark.ai backend dependencies
+#
+# CRITICAL PIN: anndata must stay at 0.7.6.  The SeuratDisk commit pinned in the
+# Dockerfile can only read the h5ad layout that this version writes; a newer
+# anndata silently produces files that Convert()/LoadH5Seurat cannot open, which
+# breaks the whole SimBu step.  Do not bump it, and do not let pip resolve a
+# newer one through scanpy.
+# ---------------------------------------------------------------------------
+anndata==0.7.6
+
+# --- Web layer (no extra auth dependency: PBKDF2 comes from the stdlib) -----
+fastapi>=0.110,<1.0
+# Outbound HTTPS for the dataset importer. The system trust store is used when
+# certifi is absent, but that is not dependable everywhere -- a python.org
+# install on macOS has none and every request fails with
+# CERTIFICATE_VERIFY_FAILED.
+certifi>=2024.2
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.6,<3.0
+python-multipart
+typing-extensions>=4.0
+orjson>=3.9,<4.0
+python-dotenv>=1.0,<2.0
+
+# --- Scientific stack (versions matched to anndata 0.7.6) ------------------
+pandas==1.5.3
+numpy>=1.21,<1.26
+scanpy==1.9.3
+scipy==1.11.1
+h5py==3.11.0
+psutil>=5.9,<7
+
+matplotlib==3.8.4
+pillow==10.3.0
+natsort==8.4.0
+packaging==24.0
+pytz==2024.1
+six==1.16.0
+
+leidenalg>=0.9,<0.12
+python-igraph>=0.10,<0.12
+
+# --- AI suite --------------------------------------------------------------
+h2o>=3.44,<4.0
+openpyxl>=3.1,<4.0
+tqdm

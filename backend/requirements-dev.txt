@@ -1,0 +1,4 @@
+# Test and lint tooling; not installed into the production image.
+-r requirements.txt
+pytest>=8.0
+httpx>=0.27

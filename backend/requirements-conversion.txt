@@ -1,0 +1,18 @@
+# ---------------------------------------------------------------------------
+# The SECOND environment: modern anndata, used only to read datasets that were
+# downloaded from CELLxGENE or EBI and to rewrite them for anndata 0.7.6.
+#
+# Why this exists: the application itself is pinned to anndata 0.7.6 because
+# the SeuratDisk commit SimBu needs can only read what 0.7.6 writes. But 0.7.6
+# also cannot READ what modern anndata writes, and every dataset published
+# today is written by a modern version. So the conversion step -- and only that
+# step -- runs in this environment, as a subprocess.
+#
+# Nothing here is ever imported by the main application.
+# ---------------------------------------------------------------------------
+anndata>=0.10,<0.12
+h5py>=3.10
+numpy>=1.24
+pandas>=2.0
+scipy>=1.11
+certifi

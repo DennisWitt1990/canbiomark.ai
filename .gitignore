@@ -1,0 +1,41 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Installed dependencies and generated output
+node_modules/
+.venv/
+venv/
+dist/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+*.log
+.DS_Store
+
+# Runtime storage and research datasets
+data/
+workspaces/
+uploads/
+results/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.h5ad
+*.h5seurat
+*.h5
+*.rds
+*.RData
+*.zip
+
+# Local editor state
+.idea/
+.vscode/
