@@ -36,9 +36,9 @@ does not by itself validate a downstream biomarker or clinical decision rule.
 Maintained by Dennis Witt at
 [DennisWitt1990/canbiomark.ai](https://github.com/DennisWitt1990/canbiomark.ai).
 A release citation will be added with the accompanying publication.
-No software licence has yet been specified; public source access alone does
-not grant a licence. Dataset access and reuse remain subject to the conditions
-of each original source.
+The software is released under the MIT licence (see LICENSE); public source
+access alone does not grant any further rights. Dataset access and reuse remain
+subject to the conditions of each original source.
 
 ## Implementation notes
 
